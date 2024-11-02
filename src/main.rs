@@ -41,18 +41,3 @@ fn main() -> anyhow::Result<()> {
         Ok(serde_json::to_writer(std::io::stdout(), &result)?)
     }
 }
-
-// enum ParsedArgs {
-//     Supports(String),
-//     Preprocess
-// }
-
-// fn parse_args() -> anyhow::Result<()> {
-//     Command::new("mdbook-minijinja")
-//         .about("An mdbook preprocessor that adds support for minijinja templates.")
-//         .subcommand(
-//             Command::new("supports")
-//                 .arg(Arg::new("renderer").required(true))
-//                 .about("Check whether a renderer is supported by this preprocessor"),
-//         )
-// }
