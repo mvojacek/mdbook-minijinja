@@ -6,9 +6,26 @@ src = "src"
 title = "MDBook Minijinja Example"
 
 [preprocessor.minijinja]
+
+# Configure behavior of evaluating undefined variables in minijinja.
+#
+# Options are "strict", "lenient", or "chained". Default is "strict".
+#
+# See https://docs.rs/minijinja/latest/minijinja/enum.UndefinedBehavior.html
+# for more details.
 undefined_behavior = "strict"
+
+# Path to a directory containing minijinja templates. Minijinja import and
+# include directives will look for templates here.
+#
+# If this path is absolute, it is used as-is. If it is relative, it is
+# interpreted relative to the path containing book.toml.
+#
+# See https://docs.rs/minijinja/latest/minijinja/fn.path_loader.html for more
+# details
 templates = "templates"
 
+# Variables defined in this section will be available for use in templates.
 [preprocessor.minijinja.variables]
 my_var = "my_var_value"
 chapter_1_name = "Cool Chapter 1"
