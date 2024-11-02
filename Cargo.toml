@@ -2,8 +2,11 @@
 name = "mdbook-minijinja"
 version = "0.1.3"
 edition = "2021"
-license-file = "LICENSE"
+license = "Apache-2.0"
+description = "mdbook-minijinja is an mdbook preprocessor that evaluates book chapters as minijinja templates."
 repository = "https://github.com/ssanderson/mdbook-minijinja"
+readme = "README.md"
+keywords = ["mdbook", "jinja", "jinja2", "templates"]
 
 [dependencies]
 anyhow = "1.0.92"
