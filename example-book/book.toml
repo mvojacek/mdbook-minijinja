@@ -6,11 +6,15 @@ src = "src"
 title = "MDBook Minijinja Example"
 
 [preprocessor.minijinja]
+undefined_behavior = "strict"
+templates = "templates"
 
 [preprocessor.minijinja.variables]
 my_var = "my_var_value"
 chapter_1_name = "Cool Chapter 1"
-conditional_true = true
-conditional_false = false
+part_1_name = "Cool Part 1"
+part_2_name = "Cool Part 2"
+condition_true = true
+condition_false = false
 list_of_strings = ["foo", "bar", "buzz"]
-
+partial_chapter_name = "Partial"

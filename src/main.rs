@@ -3,6 +3,7 @@ use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
 use semver::{Version, VersionReq};
 
 mod preprocessor;
+mod config;
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();
@@ -27,7 +28,7 @@ fn main() -> anyhow::Result<()> {
         let version_req = VersionReq::parse(mdbook::MDBOOK_VERSION)?;
 
         if !version_req.matches(&book_version) {
-            eprintln!(
+            log::warn!(
                 "Warning: The {} plugin was built against version {} of mdbook, \
              but we're being called from version {}",
                 pre.name(),
