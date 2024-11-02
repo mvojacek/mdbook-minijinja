@@ -1,0 +1,16 @@
+[book]
+authors = ["Scott Sanderson"]
+language = "en"
+multilingual = false
+src = "src"
+title = "MDBook Minijinja Example"
+
+[preprocessor.minijinja]
+
+[preprocessor.minijinja.variables]
+my_var = "my_var_value"
+chapter_1_name = "Cool Chapter 1"
+conditional_true = true
+conditional_false = false
+list_of_strings = ["foo", "bar", "buzz"]
+
