@@ -1,7 +1,7 @@
 use mdbook::{
-    book::{Book, SummaryItem},
+    book::Book,
     preprocess::{Preprocessor, PreprocessorContext},
-    BookItem,
+    BookItem, MDBook,
 };
 use serde::Serialize;
 
@@ -14,7 +14,7 @@ impl Preprocessor for MiniJinjaPreprocessor {
         "minijinja"
     }
 
-    fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> anyhow::Result<Book> {
+    fn run(&self, ctx: &PreprocessorContext, book: Book) -> anyhow::Result<Book> {
         let conf: Option<config::MiniJinjaConfig> = ctx
             .config
             .get_deserialized_opt(format!("preprocessor.{}", self.name()))?;
@@ -23,55 +23,34 @@ impl Preprocessor for MiniJinjaPreprocessor {
             anyhow::bail!("missing config section for {}", self.name())
         };
 
-        log::debug!("{conf:#?}");
+        log::trace!("{conf:#?}");
 
         let env = conf.create_env(&ctx.root);
 
-        // XXX: mdBook has already loaded the summary by the time we get here,
-        // so we need to load it ourselves, evaluate it as a template, and then
-        // try to figure out how that should modify what mdbook loaded.
-        //
-        // This doesn't really fully work: we can support basic templated
-        // values in chapter names, and conditionally included/excluded
-        // chapters, but fully general jinja templates aren't supported.
-        let mut summary_text = std::fs::read_to_string(ctx.config.book.src.join("SUMMARY.md"))?;
-        eval_in_place(&env, &mut summary_text, &conf.variables);
+        let mut book = if conf.preprocess_summary {
+            // mdBook has already loaded the summary by the time we get here, so we
+            // need to reload it ourselves, evaluate it as a template, and then
+            // replace what mdbook loaded with our own evaluated templates.
+            //
+            // This discards the output of any preprocessors that ran before us, so
+            // mdbook-minijinja should be configured as the first preprocessor.
+            let summary_path = ctx.config.book.src.join("SUMMARY.md");
+            log::info!("reloading summary from {}", summary_path.display());
 
-        let summary = mdbook::book::parse_summary(&summary_text)?;
-        let summary_names = summary
-            .prefix_chapters
-            .iter()
-            .chain(summary.numbered_chapters.iter())
-            .chain(summary.suffix_chapters.iter())
-            .filter_map(|c| match c {
-                SummaryItem::Link(l) => Some(l.name.clone()),
-                _ => None,
-            })
-            .collect::<std::collections::HashSet<_>>();
+            let mut summary_text = std::fs::read_to_string(summary_path)?;
+            eval_in_place(&env, &mut summary_text, &conf.variables);
+            let summary = mdbook::book::parse_summary(&summary_text)?;
 
-        // Filter out sections that should get dropped after evaluating the
-        // summary as a template.
-        book.sections = book
-            .sections
-            .iter()
-            .filter_map(|item| match item {
-                BookItem::Chapter(c) => match env.render_str(&c.name, &conf.variables) {
-                    Ok(name) => {
-                        if summary_names.contains(&name) {
-                            Some(item)
-                        } else {
-                            None
-                        }
-                    }
-                    Err(e) => {
-                        log_jinja_err(&e);
-                        None
-                    }
-                },
-                _ => Some(item),
-            })
-            .cloned()
-            .collect::<Vec<_>>();
+            let MDBook { book, .. } = MDBook::load_with_config_and_summary(
+                ctx.root.clone(),
+                ctx.config.clone(),
+                summary,
+            )?;
+            book
+        } else {
+            log::info!("skipping preprocessing of SUMMARY.md because preprocess_summary is false");
+            book
+        };
 
         book.for_each_mut(|item| match item {
             BookItem::Chapter(c) => {
