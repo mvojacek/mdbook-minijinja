@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-minijinja"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2021"
 license = "Apache-2.0"
 description = "mdbook-minijinja is an mdbook preprocessor that evaluates book chapters as minijinja templates."
