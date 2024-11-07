@@ -7,22 +7,43 @@ title = "MDBook Minijinja Example"
 
 [preprocessor.minijinja]
 
+# Whether or not mdbook-minijinja should evaluate SUMMARY.md
+# as a template. If this is true, mdbook-minijinja will reload SUMMARY.md,
+# evaluate it as a template, and then reload book chapters from the
+# re-parsed SUMMARY.md. This discards the effects of any preprocessors
+# that ran before mdbook-minijinja, so mdbook-minijinja should be configured
+# as the first preprocessor if summary preprocessing is enabled. Use
+# the `before` key to configure preprocessor order.
+#
+# Default value is false.
+preprocess_summary = true
+
+# Configure mdbook-minijinja to run before other preprocessors.
+#
+# "index" and "links" are built-in preprocessors run by mdbook by default. If you
+# have other preprocessors enabled, you may want to include them here as well.
+before = ["index", "links"]
+
 # Configure behavior of evaluating undefined variables in minijinja.
 #
-# Options are "strict", "lenient", or "chained". Default is "strict".
+# Options are "strict", "lenient", or "chained".
 #
 # See https://docs.rs/minijinja/latest/minijinja/enum.UndefinedBehavior.html
 # for more details.
+#
+# Default value is "strict".
 undefined_behavior = "strict"
 
 # Path to a directory containing minijinja templates. Minijinja import and
 # include directives will look for templates here.
 #
 # If this path is absolute, it is used as-is. If it is relative, it is
-# interpreted relative to the path containing book.toml.
+# interpreted relative to the directory containing book.toml.
 #
 # See https://docs.rs/minijinja/latest/minijinja/fn.path_loader.html for more
-# details
+# details.
+#
+# Default value is "templates".
 templates = "templates"
 
 # Variables defined in this section will be available for use in templates.

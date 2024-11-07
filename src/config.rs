@@ -5,14 +5,24 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct MiniJinjaConfig {
+    /// Whether we should preprocess SUMMARY.md.
+    #[serde(default)]
+    pub preprocess_summary: bool,
+
+    /// Variables to be passed to the minijinja environment.
     pub variables: toml::Table,
+
+    /// Undefined behavior setting for minijinja.
     #[serde(default)]
     pub undefined_behavior: UndefinedBehavior,
+
+    /// Templates directory for minijinja.
     #[serde(default = "MiniJinjaConfig::default_templates_dir")]
     pub templates_dir: PathBuf,
 }
 
 impl MiniJinjaConfig {
+    /// Create a new minijinja::Environment based on the configuration.
     pub fn create_env<'source>(&self, root: &PathBuf) -> Environment<'source> {
         let mut env = Environment::new();
         env.set_undefined_behavior(self.undefined_behavior.into());
@@ -22,7 +32,8 @@ impl MiniJinjaConfig {
         } else {
             root.join(&self.templates_dir)
         };
-        log::info!("loading templates from {}", templates_dir.display());
+
+        log::debug!("loading templates from {}", templates_dir.display());
 
         env.set_loader(minijinja::path_loader(templates_dir));
         env

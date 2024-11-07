@@ -18,3 +18,7 @@
 # Templates
 
 - [Uses Templates](./templates.md)
+
+{% if condition_true %}
+{% include "conditional_summary_section.md" %}
+{% endif %}
