@@ -19,6 +19,9 @@ pub struct MiniJinjaConfig {
     /// Templates directory for minijinja.
     #[serde(default = "MiniJinjaConfig::default_templates_dir")]
     pub templates_dir: PathBuf,
+
+    #[serde(default)]
+    pub prelude_string: String,
 }
 
 impl MiniJinjaConfig {

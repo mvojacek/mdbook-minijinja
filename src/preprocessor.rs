@@ -6,6 +6,7 @@ use mdbook::{
 use serde::Serialize;
 
 use crate::config;
+use crate::config::MiniJinjaConfig;
 
 pub struct MiniJinjaPreprocessor;
 
@@ -38,7 +39,7 @@ impl Preprocessor for MiniJinjaPreprocessor {
             log::info!("reloading summary from {}", summary_path.display());
 
             let mut summary_text = std::fs::read_to_string(summary_path)?;
-            eval_in_place(&env, &mut summary_text, &conf.variables);
+            eval_in_place(&conf, &env, &mut summary_text, &conf.variables);
             let summary = mdbook::book::parse_summary(&summary_text)?;
 
             let MDBook { book, .. } = MDBook::load_with_config_and_summary(
@@ -54,19 +55,25 @@ impl Preprocessor for MiniJinjaPreprocessor {
 
         book.for_each_mut(|item| match item {
             BookItem::Chapter(c) => {
-                eval_in_place(&env, &mut c.name, &conf.variables);
-                eval_in_place(&env, &mut c.content, &conf.variables);
+                eval_in_place(&conf,&env, &mut c.name, &conf.variables);
+                eval_in_place(&conf, &env, &mut c.content, &conf.variables);
             }
             BookItem::Separator => {}
-            BookItem::PartTitle(ref mut title) => eval_in_place(&env, title, &conf.variables),
+            BookItem::PartTitle(ref mut title) => eval_in_place(&conf, &env, title, &conf.variables),
         });
 
         Ok(book)
     }
 }
 
-fn eval_in_place(env: &minijinja::Environment, s: &mut String, vars: impl Serialize) {
-    match env.render_str(s, vars) {
+fn eval_in_place(conf: &MiniJinjaConfig, env: &minijinja::Environment, s: &mut String, vars: impl Serialize) {
+    let s_with_prelude = if conf.prelude_string.is_empty() {
+        &*s
+    } else {
+        &*format!("{}\n{}", conf.prelude_string, s)
+    };
+
+    match env.render_str(s_with_prelude, vars) {
         Ok(res) => {
             *s = res;
         }

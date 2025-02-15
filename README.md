@@ -56,6 +56,12 @@ undefined_behavior = "strict"
 # Default value is "templates".
 templates = "templates"
 
+# String to include at the beginning of every chapter file. This is useful for
+# including common content like a prelude or front matter.
+#
+# Default value is "", which has no effect on the content.
+prelude_string = "{% include \"prelude.j2\" %}"
+
 # Variables defined in this section will be available for use in templates.
 [preprocessor.minijinja.variables]
 my_var = "my_var_value"
