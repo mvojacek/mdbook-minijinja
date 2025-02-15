@@ -1,7 +1,8 @@
-use minijinja::Environment;
+use minijinja::{Environment, Value};
 use std::path::PathBuf;
 
 use serde::Deserialize;
+use crate::dynamic_env::DynamicEnvironment;
 
 #[derive(Debug, Deserialize)]
 pub struct MiniJinjaConfig {
@@ -22,6 +23,9 @@ pub struct MiniJinjaConfig {
 
     #[serde(default)]
     pub prelude_string: String,
+
+    #[serde(default)]
+    pub global_env: bool,
 }
 
 impl MiniJinjaConfig {
@@ -39,6 +43,11 @@ impl MiniJinjaConfig {
         log::debug!("loading templates from {}", templates_dir.display());
 
         env.set_loader(minijinja::path_loader(templates_dir));
+
+        if self.global_env {
+            env.add_global("env", Value::from_object(DynamicEnvironment::new()));
+        }
+
         env
     }
 

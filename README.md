@@ -62,6 +62,11 @@ templates = "templates"
 # Default value is "", which has no effect on the content.
 prelude_string = "{% include \"prelude.j2\" %}"
 
+# Whether or not to expose the process environment variables to minijinja templates as a "env" global variable.
+#
+# Default value is false.
+global_env = true
+
 # Variables defined in this section will be available for use in templates.
 [preprocessor.minijinja.variables]
 my_var = "my_var_value"
