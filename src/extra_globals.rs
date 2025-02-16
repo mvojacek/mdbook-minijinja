@@ -201,12 +201,20 @@ pub mod functions {
 
     fn copy_file(state: &State, src: &str, dst: Option<&str>, kwargs: Kwargs) -> Result<Value, Error> {
         debug!("copy_file: src: {:?}, dst: {:?}, kwargs: {:?}", src, dst, kwargs);
+        let mkdir = kwargs.get::<Option<bool>>("mkdir")?.unwrap_or(true);
         let rel_src = get_relative_type(&kwargs, "srcrel")?.unwrap_or(RelativeType::Template);
         let rel_dst = get_relative_type(&kwargs, "dstrel")?.unwrap_or(RelativeType::ChapterBuild);
         kwargs.assert_all_used()?;
         let src_path = resolve_path(state, src, rel_src)?;
         let dst_path = resolve_path(state, dst.unwrap_or(src), rel_dst)?;
         info!("copying file from {:?} to {:?}", src_path, dst_path);
+        if mkdir {
+            if let Some(parent) = dst_path.parent() {
+                std::fs::create_dir_all(parent).map_err(|e| {
+                    Error::new(ErrorKind::WriteFailure, format!("could not create directory: {}", e))
+                })?;
+            }
+        }
         match std::fs::copy(src_path, dst_path) {
             Ok(_) => Ok(true.into()),
             Err(e) => Err(Error::new(ErrorKind::WriteFailure, format!("could not copy file: {}", e))),
