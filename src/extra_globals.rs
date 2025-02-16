@@ -133,7 +133,7 @@ impl Object for BookObject {
 
 pub mod functions {
     use crate::extra_globals::{BookObject, ChapterObject};
-    use log::info;
+    use log::{error, info};
     use minijinja::value::{Kwargs, ViaDeserialize};
     use minijinja::{Environment, Error, ErrorKind, State, Value};
     use serde::Deserialize;
@@ -197,14 +197,17 @@ pub mod functions {
     }
 
     fn file_exists(state: &State, filename: &str, kwargs: Kwargs) -> Result<Value, Error> {
-        let relative_type = get_relative_type(&kwargs, "rel")?.unwrap_or(RelativeType::Chapter);
+        let relative_type = get_relative_type(&kwargs, "rel")?.unwrap_or(RelativeType::Template);
+        kwargs.assert_all_used()?;
         let path = resolve_path(state, filename, relative_type)?;
         Ok(std::fs::metadata(path).is_ok().into())
     }
 
     fn copy_file(state: &State, src: &str, dst: Option<&str>, kwargs: Kwargs) -> Result<Value, Error> {
-        let rel_src = get_relative_type(&kwargs, "srcrel")?.unwrap_or(RelativeType::Chapter);
+        error!("copy_file");
+        let rel_src = get_relative_type(&kwargs, "srcrel")?.unwrap_or(RelativeType::Template);
         let rel_dst = get_relative_type(&kwargs, "dstrel")?.unwrap_or(RelativeType::ChapterBuild);
+        kwargs.assert_all_used()?;
         let src_path = resolve_path(state, src, rel_src)?;
         let dst_path = resolve_path(state, dst.unwrap_or(src), rel_dst)?;
         info!("copying file from {:?} to {:?}", src_path, dst_path);
