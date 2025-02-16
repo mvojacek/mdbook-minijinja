@@ -133,7 +133,7 @@ impl Object for BookObject {
 
 pub mod functions {
     use crate::extra_globals::{BookObject, ChapterObject};
-    use log::{debug, error, info};
+    use log::{debug, info};
     use minijinja::value::{Kwargs, ViaDeserialize};
     use minijinja::{Environment, Error, ErrorKind, State, Value};
     use serde::Deserialize;
