@@ -133,7 +133,7 @@ impl Object for BookObject {
 
 pub mod functions {
     use crate::extra_globals::{BookObject, ChapterObject};
-    use log::{error, info};
+    use log::{debug, error, info};
     use minijinja::value::{Kwargs, ViaDeserialize};
     use minijinja::{Environment, Error, ErrorKind, State, Value};
     use serde::Deserialize;
@@ -172,22 +172,16 @@ pub mod functions {
             Source => PathBuf::from(&get_bookobject(state)?.src_dir).join(path),
             Template => PathBuf::from(&get_bookobject(state)?.template_dir).join(path),
             Build => PathBuf::from(&get_bookobject(state)?.build_dir).join(path),
-            Chapter => PathBuf::from(get_chapterobject(state)?.source_dir.as_ref().ok_or(
-                Error::new(ErrorKind::UndefinedError, "'source_dir' not found in 'chapter'")
-            )?).join(path),
-            ChapterBuild => {
-                let book = get_bookobject(state)?;
-                let chapter = get_chapterobject(state)?;
-                let build_dir = PathBuf::from(&book.build_dir);
-                let source_dir = PathBuf::from(&book.src_dir);
-                let chapter_source_dir = PathBuf::from(chapter.source_dir.as_ref().ok_or(
+            Chapter => PathBuf::from(&get_bookobject(state)?.src_dir).join(
+                get_chapterobject(state)?.source_dir.as_ref().ok_or(
                     Error::new(ErrorKind::UndefinedError, "'source_dir' not found in 'chapter'")
-                )?);
-                let relative_path = chapter_source_dir.strip_prefix(&source_dir).map_err(|_| {
-                    Error::new(ErrorKind::UndefinedError, "chapter 'source_dir' not a prefix of book 'src_dir'")
-                })?;
-                build_dir.join(relative_path).join(path)
-            }
+                )?
+            ).join(path),
+            ChapterBuild => PathBuf::from(&get_bookobject(state)?.build_dir).join(
+                get_chapterobject(state)?.source_dir.as_ref().ok_or(
+                    Error::new(ErrorKind::UndefinedError, "'source_dir' not found in 'chapter'")
+                )?
+            ).join(path),
         })
     }
 
@@ -197,14 +191,16 @@ pub mod functions {
     }
 
     fn file_exists(state: &State, filename: &str, kwargs: Kwargs) -> Result<Value, Error> {
+        debug!("file_exists: filename: {:?}, kwargs: {:?}", filename, kwargs);
         let relative_type = get_relative_type(&kwargs, "rel")?.unwrap_or(RelativeType::Template);
         kwargs.assert_all_used()?;
         let path = resolve_path(state, filename, relative_type)?;
+        debug!("checking if file exists: {:?}", path);
         Ok(std::fs::metadata(path).is_ok().into())
     }
 
     fn copy_file(state: &State, src: &str, dst: Option<&str>, kwargs: Kwargs) -> Result<Value, Error> {
-        error!("copy_file");
+        debug!("copy_file: src: {:?}, dst: {:?}, kwargs: {:?}", src, dst, kwargs);
         let rel_src = get_relative_type(&kwargs, "srcrel")?.unwrap_or(RelativeType::Template);
         let rel_dst = get_relative_type(&kwargs, "dstrel")?.unwrap_or(RelativeType::ChapterBuild);
         kwargs.assert_all_used()?;
@@ -217,8 +213,21 @@ pub mod functions {
         }
     }
 
+    fn load_file(state: &State, filename: &str, kwargs: Kwargs) -> Result<Value, Error> {
+        debug!("load_file: filename: {:?}, kwargs: {:?}", filename, kwargs);
+        let relative_type = get_relative_type(&kwargs, "rel")?.unwrap_or(RelativeType::Template);
+        kwargs.assert_all_used()?;
+        let path = resolve_path(state, filename, relative_type)?;
+        debug!("loading file: {:?}", path);
+        match std::fs::read_to_string(path) {
+            Ok(content) => Ok(content.into()),
+            Err(e) => Err(Error::new(ErrorKind::InvalidOperation, format!("could not read file: {}", e))),
+        }
+    }
+
     pub fn add_functions(env: &mut Environment) {
         env.add_function("file_exists", file_exists);
         env.add_function("copy_file", copy_file);
+        env.add_function("load_file", load_file);
     }
 }
