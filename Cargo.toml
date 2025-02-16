@@ -14,7 +14,8 @@ clap = { version = "4.5.29", features = ["string"]}
 env_logger = "0.11.6"
 log = "0.4.25"
 mdbook = {version = "=0.4.43", default-features = false}
-minijinja = {version = "2.7.0", features = ["loader"]}
+minijinja = {version = "2.7.0", features = ["loader", "loop_controls", "stacker", "speedups"]}
+minijinja-contrib = { version = "2.7.0", features = ["pycompat"] }
 semver = "1.0.25"
 serde = "1.0.217"
 serde_json = "1.0.138"

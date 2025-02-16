@@ -29,6 +29,8 @@ impl Preprocessor for MiniJinjaPreprocessor {
         log::trace!("{conf:#?}");
 
         let mut env = conf.create_env(&ctx.root);
+        
+        env.set_unknown_method_callback(minijinja_contrib::pycompat::unknown_method_callback);
 
         let book_object = BookObject::new(&ctx, &conf);
         env.add_global("book", Value::from_object(book_object));
