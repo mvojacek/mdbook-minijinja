@@ -3,10 +3,12 @@ use mdbook::{
     preprocess::{Preprocessor, PreprocessorContext},
     BookItem, MDBook,
 };
+use minijinja::Value;
 use serde::Serialize;
 
-use crate::config;
 use crate::config::MiniJinjaConfig;
+use crate::extra_globals;
+use crate::extra_globals::{BookObject, ChapterObject, EnvironmentObject};
 
 pub struct MiniJinjaPreprocessor;
 
@@ -16,7 +18,7 @@ impl Preprocessor for MiniJinjaPreprocessor {
     }
 
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> anyhow::Result<Book> {
-        let conf: Option<config::MiniJinjaConfig> = ctx
+        let conf: Option<MiniJinjaConfig> = ctx
             .config
             .get_deserialized_opt(format!("preprocessor.{}", self.name()))?;
 
@@ -26,7 +28,16 @@ impl Preprocessor for MiniJinjaPreprocessor {
 
         log::trace!("{conf:#?}");
 
-        let env = conf.create_env(&ctx.root);
+        let mut env = conf.create_env(&ctx.root);
+
+        let book_object = BookObject::new(&ctx, &conf);
+        env.add_global("book", Value::from_object(book_object));
+
+        if conf.global_env {
+            env.add_global("env", Value::from_object(EnvironmentObject::new()));
+        }
+
+        extra_globals::functions::add_functions(&mut env);
 
         let mut book = if conf.preprocess_summary {
             // mdBook has already loaded the summary by the time we get here, so we
@@ -55,7 +66,8 @@ impl Preprocessor for MiniJinjaPreprocessor {
 
         book.for_each_mut(|item| match item {
             BookItem::Chapter(c) => {
-                eval_in_place(&conf,&env, &mut c.name, &conf.variables, false);
+                env.add_global("chapter", Value::from_object(ChapterObject::from(&*c)));
+                eval_in_place(&conf, &env, &mut c.name, &conf.variables, false);
                 eval_in_place(&conf, &env, &mut c.content, &conf.variables, true);
             }
             BookItem::Separator => {}

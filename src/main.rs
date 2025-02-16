@@ -4,7 +4,7 @@ use semver::{Version, VersionReq};
 
 mod preprocessor;
 mod config;
-mod dynamic_env;
+mod extra_globals;
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();

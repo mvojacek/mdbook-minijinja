@@ -2,7 +2,7 @@ use minijinja::{Environment, Value};
 use std::path::PathBuf;
 
 use serde::Deserialize;
-use crate::dynamic_env::DynamicEnvironment;
+use crate::extra_globals::EnvironmentObject;
 
 #[derive(Debug, Deserialize)]
 pub struct MiniJinjaConfig {
@@ -45,7 +45,7 @@ impl MiniJinjaConfig {
         env.set_loader(minijinja::path_loader(templates_dir));
 
         if self.global_env {
-            env.add_global("env", Value::from_object(DynamicEnvironment::new()));
+            env.add_global("env", Value::from_object(EnvironmentObject::new()));
         }
 
         env
