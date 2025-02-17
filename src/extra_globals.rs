@@ -233,9 +233,14 @@ pub mod functions {
         }
     }
 
+    fn hex(number: i64, digits: Option<u64>) -> String {
+        format!("{:0width$x}", number, width = digits.unwrap_or(0) as usize)
+    }
+
     pub fn add_functions(env: &mut Environment) {
         env.add_function("file_exists", file_exists);
         env.add_function("copy_file", copy_file);
         env.add_function("load_file", load_file);
+        env.add_function("hex", hex);
     }
 }
